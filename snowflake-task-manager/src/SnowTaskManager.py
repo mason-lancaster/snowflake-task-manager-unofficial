@@ -12,6 +12,8 @@ from plotly.subplots import make_subplots
 from st_aggrid import AgGrid, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 import os
+current_tz =  "'"+ tzlocal.get_localzone_name() + "'"
+print(str(current_tz))
 
 # import statement END
 
@@ -39,9 +41,12 @@ st.markdown(hide_table_row_index, unsafe_allow_html=True)
 
 # Variable declaration START
 file_dir = os.path.dirname(os.path.dirname(__file__))
-task_list_file = (file_dir + '/data/task.csv')
-task_hist_file = (file_dir + '/data/task_hist.csv')
+# task_list_file = (file_dir + '/data/task.csv')
+# task_hist_file = (file_dir + '/data/task_hist.csv')
+task_list_file = '/Users/mason-lancaster/Documents/Code/GitHub/snowflake-task-manager-unofficial/task.csv'
+task_hist_file = '/Users/mason-lancaster/Documents/Code/GitHub/snowflake-task-manager-unofficial/task_hist.csv'
 current_tz =  "'"+ tzlocal.get_localzone_name() + "'"
+print(str(current_tz))
 print(tzlocal.get_localzone_name())
 print(file_dir)
 print(task_list_file)
@@ -59,9 +64,29 @@ def current_dt():
 
 # Creating Snowflake Connection Object START
 @st.experimental_singleton
+# def init_connection():
+#     # Enterprise
+#     return snowflake.connector.connect(
+#         user = '',
+#         password = '',
+#         account = '',
+#         warehouse = 'DEO',
+#         database = 'SNOWFLAKE',
+#         schema = 'INFORMATION_SCHEMA',
+#         role = 'ACCOUNTADMIN',
+#         client_session_keep_alive=True
+#     )
 def init_connection():
+    # psdatum
     return snowflake.connector.connect(
-        **st.secrets["snowflake"], client_session_keep_alive=True
+        user = '',
+        password = '',
+        account = '',
+        warehouse = 'DEO',
+        database = 'SNOWFLAKE',
+        schema = 'INFORMATION_SCHEMA',
+        role = 'ACCOUNTADMIN',
+        client_session_keep_alive=True
     )
 
 conn = init_connection()
@@ -287,7 +312,7 @@ with tab3:
 
     for col, field_name in zip(colms, ['NAME', 'DATABASE_NAME', 'SCHEMA_NAME', 'STATE', 'SCHEDULED_TIME']):
         col.write(field_name)
-
+    counter = 0
     for idx, task_name in enumerate(task_list['NAME']):
         col1, col2, col3, col4, col5, col6 = st.columns((6))
         col1.write(task_list['NAME'][idx])
@@ -297,13 +322,14 @@ with tab3:
         col5.write(task_list['SCHEDULE'][idx])
 
         placeholder = col6.empty()
-        show_more = placeholder.button("Run History", key=task_name)
+        show_more = placeholder.button("Run History", key=task_name + str(counter))
 
         # if button pressed
         if show_more:
             placeholder.button("less", key=str(idx) + "_")
             res = task_hist.loc[task_hist['NAME'] == task_name]
             AgGrid(res)
+        counter += 1
 
 # TAB4
 with tab4:
@@ -356,7 +382,7 @@ with tab4:
 # Sidebar definition START
 
 with st.sidebar:
-    st.image('task.png', width=150)
+    st.image('/Users/mason-lancaster/Documents/Code/GitHub/snowflake-task-manager-unofficial/snowflake-task-manager/src/task.png', width=150)
 
     # st.metric(label="Run Statistics", value="10 Success", delta="5 %")
     if st.button('Refresh Task Data?'):
